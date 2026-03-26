@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16
+    container_name: odoo19-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - odoo19-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  odoo:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: odoo19-web
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8069:8069"
+      - "8072:8072"
+    environment:
+      HOST: db
+      USER: ${POSTGRES_USER}
+      PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./:/opt/odoo
+      - ./config/odoo.conf:/etc/odoo/odoo.conf
+      - odoo19-web-data:/var/lib/odoo
+    command: ["python", "odoo-bin", "-c", "/etc/odoo/odoo.conf", "--dev=reload,qweb,xml"]
+
+volumes:
+  odoo19-db-data:
+  odoo19-web-data:

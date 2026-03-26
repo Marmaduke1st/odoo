@@ -51,3 +51,7 @@ package.json
 /man/
 /share/
 /src/
+
+# local self-hosting stack
+/.env
+/config/*.local.conf
